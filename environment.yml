@@ -7,3 +7,4 @@ channels:
   - conda-forge
 dependencies:
   - java-jdk=8.0.112
+  - unzip=6.0
