@@ -1,0 +1,9 @@
+# You can use this file to create a conda environment for this pipeline:
+#   conda env create -f environment.yml
+name: pgs-calc-nf
+channels:
+  - defaults
+  - bioconda
+  - conda-forge
+dependencies:
+  - java-jdk=8.0.112
