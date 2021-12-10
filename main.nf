@@ -119,7 +119,7 @@ process calcScores {
   wget https://www.pgscatalog.org/rest/score/all -O pgs-catalog.json
 
   pgs-calc *.vcf.gz \
-    --ref ${score_id} \
+    --ref ${score_id}.txt.gz \
     --out ${score_id}.txt \
     --report-html ${score_id}.html \
     --meta pgs-catalog.json \
