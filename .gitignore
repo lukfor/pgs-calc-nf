@@ -1,0 +1,5 @@
+.nextflow.log*
+work
+output
+.nextflow
+test.config
