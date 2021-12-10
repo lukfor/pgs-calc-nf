@@ -30,8 +30,14 @@ workflow:
       category: dbsnp-index
       required: true
 
+    - id: pgs_catalog
+      description: Catalog
+      type: app_list
+      category: pgs-catalog
+      required: true
+
     - id: pgs_scores
-      description: PGS IDs
+      description: IDs
       type: text
       required: true
 
