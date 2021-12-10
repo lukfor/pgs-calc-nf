@@ -1,6 +1,6 @@
 
 Channel.fromFilePairs(params.dbsnp_index).set { dbsnp_index_ch}
-Channel.fromFilePairs(params.genotypes_imputed, size: 2).set {vcf_files}
+vcf_files = Channel.fromPath(params.genotypes_imputed)
 
 if (params.genotypes_imputed_format != 'vcf'){
   exit 1, "PGS Calc supports only vcf files."
@@ -89,7 +89,7 @@ process calcScores {
   publishDir params.output, mode: 'copy'
 
   input:
-    tuple val(vcf_name), file(vcf_file) from vcf_files.collect()
+    file(vcf_file) from vcf_files.collect()
     val score from scores_ch
     tuple val(dbsnp_index), file(dbsnp_index_file) from dbsnp_index_ch.collect()
     file ConvertScore
