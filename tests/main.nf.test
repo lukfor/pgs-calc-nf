@@ -1,0 +1,28 @@
+nextflow_pipeline {
+
+    name "Test Workflow main.nf"
+    script "main.nf"
+
+    test("Test score from local catalog") {
+
+        when {
+            def testOutdir = outputDir
+            params {
+                project = "gckd-chr6"
+                genotypes_imputed = "tests/data/*.vcf"
+                genotypes_imputed_format = "vcf"
+                genotypes_build = "hg19"
+                output = "${testOutdir}"
+                pgs_scores = "IBK000001"
+                pgs_catalog_url = "tests/data/metadata.xlsx"
+                dbsnp_index = "tests/data/dbsnp-index.small{.txt.gz,.txt.gz.tbi}"
+            }
+        }
+
+        then {
+            assert workflow.success
+        }
+
+    }
+
+}

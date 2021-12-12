@@ -1,6 +1,6 @@
 # pgs-calc-nf
 
-> Nextflow pipeline to calculate polygenetic riskscores using pgs-calc
+> Nextflow pipeline to calculate polygenic scores using pgs-calc
 
 ## Requirements
 
