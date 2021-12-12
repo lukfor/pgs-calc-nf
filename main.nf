@@ -18,22 +18,18 @@ if (params.genotypes_build == "hg19"){
 
 
 ExcelToCsvJava = file("$baseDir/src/ExcelToCsv.java")
-ConvertScoreJava = file("$baseDir/src/ConvertScore.java")
 
 
 process cacheJBangScripts {
 
   input:
     file ExcelToCsvJava
-    file ConvertScoreJava
 
   output:
     file "ExcelToCsv.jar" into ExcelToCsv
-    file "ConvertScore.jar" into ConvertScore
 
   """
   jbang export portable -O=ExcelToCsv.jar ${ExcelToCsvJava}
-  jbang export portable -O=ConvertScore.jar ${ConvertScoreJava}
   """
 
 }
@@ -92,13 +88,13 @@ process calcScores {
     file(vcf_file) from vcf_files.collect()
     val score from scores_ch
     tuple val(dbsnp_index), file(dbsnp_index_file) from dbsnp_index_ch.collect()
-    file ConvertScore
 
   output:
-    file "*.txt" into results_ch
-    file "*.html" into report_ch
-    file "*.txt.gz" optional true into pgs_catalog_scores_files
-    file "*.log" into pgs_catalog_scores_logs
+    file "*.txt" into score_chunks_ch
+    file "*.json" into report_chunks_ch
+    file "*.html"
+    file "*.txt.gz"
+    file "*.log"
 
   script:
     score_id = score['Polygenic Score (PGS) ID']
@@ -107,21 +103,26 @@ process calcScores {
 
   """
 
+  set -e
+
   ##TODO check build and write to log if not same.
 
   wget ${score_ftp_link} -O ${score_id}.original.txt.gz
-  java -jar ${ConvertScore} \
-    --input ${score_id}.original.txt.gz \
-    --output ${score_id}.txt.gz \
-    --dbsnp ${dbsnp_index}.txt.gz
+
+  pgs-calc resolve \
+    --in ${score_id}.original.txt.gz \
+    --out ${score_id}.txt.gz \
+    --dbsnp ${dbsnp_index}.txt.gz > ${score_id}.log
+
   rm ${score_id}.original.txt.gz
 
   wget https://www.pgscatalog.org/rest/score/all -O pgs-catalog.json
 
-  pgs-calc *.vcf.gz \
+  pgs-calc apply *.vcf \
     --ref ${score_id}.txt.gz \
     --out ${score_id}.txt \
     --report-html ${score_id}.html \
+    --report-json ${score_id}.json \
     --meta pgs-catalog.json \
     --no-ansi
   """
