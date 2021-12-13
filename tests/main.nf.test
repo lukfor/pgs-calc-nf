@@ -47,5 +47,27 @@ nextflow_pipeline {
 
     }
 
+    test("Test score from pgs catalog with two scores") {
+
+        when {
+            def testOutdir = outputDir
+            params {
+                project = "test-gwas"
+                genotypes_imputed = "tests/data/*.vcf"
+                genotypes_imputed_format = "vcf"
+                genotypes_build = "hg19"
+                output = "${testOutdir}"
+                pgs_scores = "PGS000957,PGS000958"
+                pgs_catalog_url = "https://ftp.ebi.ac.uk/pub/databases/spot/pgs/metadata/pgs_all_metadata.xlsx"
+                dbsnp_index = "tests/data/dbsnp-index.small{.txt.gz,.txt.gz.tbi}"
+            }
+        }
+
+        then {
+            assert workflow.success
+        }
+
+    }
+
 
 }
