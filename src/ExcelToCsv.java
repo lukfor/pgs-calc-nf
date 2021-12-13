@@ -12,7 +12,7 @@ import picocli.CommandLine.Option;
 //usr/bin/env jbang "$0" "$@" ; exit $?
 //REPOS jcenter,jfrog-genepi-maven=https://genepi.jfrog.io/artifactory/maven
 //DEPS info.picocli:picocli:4.5.0
-//DEPS genepi:genepi-io:1.1.1
+//DEPS genepi:genepi-io:1.2.0
 
 public class ExcelToCsv implements Callable<Integer> {
 

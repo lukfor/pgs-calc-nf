@@ -72,40 +72,65 @@ process convertPgsCatalogMeta {
 }
 
 
-// filter out other pgs scores
-pgs_catalog_csv_file
-  .splitCsv(header: true, sep: ',', quote:'"')
-  .filter(row -> row['Polygenic Score (PGS) ID'] in (params.pgs_scores.split(',')) )
-  .set { scores_ch }
+if (params.pgs_catalog_url.startsWith('https://') || params.pgs_catalog_url.startsWith('http://')){
 
-process prepareScore {
+
+  // filter out other pgs scores
+  pgs_catalog_csv_file
+    .splitCsv(header: true, sep: ',', quote:'"')
+    .filter(row -> row['Polygenic Score (PGS) ID'] in (params.pgs_scores.split(',')) )
+    .map(row -> tuple(row['Polygenic Score (PGS) ID'], row['FTP link']) )
+    .set { score_rows }
+
+  process downloadScore {
+
+    publishDir params.output, mode: 'copy'
+
+    input:
+      tuple val(score_id), val(score_ftp_link) from score_rows
+
+    output:
+      tuple val(score_id), file("${score_id}.original.txt.gz") into scores_ch
+
+    """
+
+    ##TODO check build and write to log if not same.
+
+    wget ${score_ftp_link} -O ${score_id}.original.txt.gz
+
+    """
+  }
+
+} else {
+
+  // filter out other pgs scores
+  pgs_catalog_csv_file
+    .splitCsv(header: true, sep: ',', quote:'"')
+    .filter(row -> row['Polygenic Score (PGS) ID'] in (params.pgs_scores.split(',')) )
+    .map(row -> tuple(row['Polygenic Score (PGS) ID'], file(new File(params.pgs_catalog_url).getAbsoluteFile().getParent() + '/' + row['FTP link'])))
+    .set { scores_ch }
+
+}
+
+
+process resolveScore {
 
   publishDir params.output, mode: 'copy'
 
   input:
-    val score from scores_ch
+    tuple val(score_id), file(score_file) from scores_ch
     tuple val(dbsnp_index), file(dbsnp_index_file) from dbsnp_index_ch.collect()
 
   output:
-    file "${score_id}.txt.gz" into prepared_scores_ch
-    file "${score_id}.log"
-
-  script:
-    score_id = score['Polygenic Score (PGS) ID']
-    score_ftp_link = score['FTP link']
+    file "${score_id}.resolved.txt.gz" into prepared_scores_ch
+    file "${score_id}.resolved.log"
 
   """
 
-  set -e
-
-  ##TODO check build and write to log if not same.
-
-  wget ${score_ftp_link} -O ${score_id}.original.txt.gz
-
   pgs-calc resolve \
-    --in ${score_id}.original.txt.gz \
-    --out ${score_id}.txt.gz \
-    --dbsnp ${dbsnp_index}.txt.gz > ${score_id}.log
+    --in ${score_file} \
+    --out ${score_id}.resolved.txt.gz \
+    --dbsnp ${dbsnp_index}.txt.gz > ${score_id}.resolved.log
 
   """
 }
