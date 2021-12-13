@@ -7,10 +7,8 @@ if (params.genotypes_imputed_format != 'vcf'){
 }
 
 if (params.genotypes_build == "hg19"){
-  dbsnp_build = "GRCh37p13";
   build_filter = "hg19|GRCh37|NR"
 } else if (params.genotypes_build == "hg38"){
-  dbsnp_build = "GRCh38p7";
   build_filter = "hg38|GRCh38|NR"
 } else {
   exit 1, "Unsupported build."
@@ -80,26 +78,21 @@ pgs_catalog_csv_file
   .filter(row -> row['Polygenic Score (PGS) ID'] in (params.pgs_scores.split(',')) )
   .set { scores_ch }
 
-process calcScores {
+process prepareScore {
 
   publishDir params.output, mode: 'copy'
 
   input:
-    file(vcf_file) from vcf_files.collect()
     val score from scores_ch
     tuple val(dbsnp_index), file(dbsnp_index_file) from dbsnp_index_ch.collect()
 
   output:
-    file "*.txt" into score_chunks_ch
-    file "*.json" into report_chunks_ch
-    file "*.html"
-    file "*.txt.gz"
-    file "*.log"
+    file "${score_id}.txt.gz" into prepared_scores_ch
+    file "${score_id}.log"
 
   script:
     score_id = score['Polygenic Score (PGS) ID']
     score_ftp_link = score['FTP link']
-
 
   """
 
@@ -114,17 +107,75 @@ process calcScores {
     --out ${score_id}.txt.gz \
     --dbsnp ${dbsnp_index}.txt.gz > ${score_id}.log
 
-  rm ${score_id}.original.txt.gz
+  """
+}
 
-  wget https://www.pgscatalog.org/rest/score/all -O pgs-catalog.json
+process calcChunks {
 
-  pgs-calc apply *.vcf \
-    --ref ${score_id}.txt.gz \
-    --out ${score_id}.txt \
-    --report-html ${score_id}.html \
-    --report-json ${score_id}.json \
-    --meta pgs-catalog.json \
+  publishDir params.output, mode: 'copy'
+
+  input:
+    file(vcf_file) from vcf_files
+    val scores from prepared_scores_ch.collect()
+
+  output:
+    file "*.txt" into score_chunks_ch
+    file "*.json" into report_chunks_ch
+
+  """
+
+  set -e
+
+  wget https://www.pgscatalog.org/rest/score/all -O pgs-catalog.meta
+
+  pgs-calc apply ${vcf_file} \
+    --ref ${scores.join(',')} \
+    --out ${vcf_file}.scores.txt \
+    --report-json ${vcf_file}.scores.json \
+    --meta pgs-catalog.meta \
     --no-ansi
+  """
+
+}
+
+process mergeChunksScore {
+
+  publishDir params.output, mode: 'copy'
+
+  input:
+    file(score_chunks) from score_chunks_ch.collect()
+
+  output:
+    file "*.txt"
+
+  """
+
+  set -e
+
+  pgs-calc merge ${score_chunks} \
+    --out ${params.project}.scores.txt
+
+  """
+
+}
+
+process mergeChunksReport {
+
+  publishDir params.output, mode: 'copy'
+
+  input:
+    file(report_chunks) from report_chunks_ch.collect()
+
+  output:
+    file "*.html"
+
+  """
+
+  set -e
+
+  pgs-calc merge-reports ${report_chunks} \
+    --out ${params.project}.scores.html
+
   """
 
 }
