@@ -108,7 +108,26 @@ if (params.pgs_catalog_url.startsWith('https://') || params.pgs_catalog_url.star
     .splitCsv(header: true, sep: ',', quote:'"')
     .filter(row -> row['Polygenic Score (PGS) ID'] in (params.pgs_scores.split(',')) )
     .map(row -> tuple(row['Polygenic Score (PGS) ID'], file(new File(params.pgs_catalog_url).getAbsoluteFile().getParent() + '/' + row['FTP link'])))
-    .set { scores_ch }
+    .set { score_rows }
+
+  process copyScore {
+
+    publishDir params.output, mode: 'copy'
+
+    input:
+      tuple val(score_id), file(score_file) from score_rows
+
+    output:
+      tuple val(score_id), file("${score_id}.original.txt.gz") into scores_ch
+
+    """
+
+    ##TODO check build and write to log if not same.
+
+    cp ${score_file} ${score_id}.original.txt.gz
+
+    """
+  }
 
 }
 
@@ -137,33 +156,28 @@ process resolveScore {
 
 process calcChunks {
 
-  publishDir params.output, mode: 'copy'
-
   input:
     tuple val(vcf_filename), path(vcf_file) from vcf_files
     val scores from prepared_scores_ch.collect()
 
   output:
     file "*.txt" into score_chunks_ch
-    file "*.json" into report_chunks_ch
+    file "*.info" into report_chunks_ch
+    file "*.log"
 
   """
-
-  set -e
-
-  wget https://www.pgscatalog.org/rest/score/all -O pgs-catalog.meta
 
   pgs-calc apply ${vcf_filename}.vcf.gz \
     --ref ${scores.join(',')} \
     --out ${vcf_filename}.scores.txt \
-    --report-json ${vcf_filename}.scores.json \
-    --meta pgs-catalog.meta \
-    --no-ansi
+    --info ${vcf_filename}.scores.info \
+    --no-ansi > ${vcf_filename}.scores.log
+
   """
 
 }
 
-process mergeChunksScore {
+process mergeScoreChunks {
 
   publishDir params.output, mode: 'copy'
 
@@ -171,20 +185,18 @@ process mergeChunksScore {
     file(score_chunks) from score_chunks_ch.collect()
 
   output:
-    file "*.txt"
+    file "*.txt" into merged_score_files
 
   """
 
-  set -e
-
-  pgs-calc merge ${score_chunks} \
+  pgs-calc merge-score ${score_chunks} \
     --out ${params.project}.scores.txt
 
   """
 
 }
 
-process mergeChunksReport {
+process mergeInfoChunks {
 
   publishDir params.output, mode: 'copy'
 
@@ -192,18 +204,43 @@ process mergeChunksReport {
     file(report_chunks) from report_chunks_ch.collect()
 
   output:
+    file "*.info" into merged_info_files
+
+  """
+
+  pgs-calc merge-info ${report_chunks} \
+    --out ${params.project}.info
+
+  """
+
+}
+
+process createHtmlReport {
+
+  publishDir params.output, mode: 'copy'
+
+  input:
+    file(merged_score) from merged_score_files
+    file(merged_info) from merged_info_files
+
+
+  output:
     file "*.html"
 
   """
 
-  set -e
+  wget https://www.pgscatalog.org/rest/score/all -O pgs-catalog.json
 
-  pgs-calc merge-reports ${report_chunks} \
+  pgs-calc report \
+    --data ${merged_score} \
+    --info ${merged_info} \
+    --meta pgs-catalog.json \
     --out ${params.project}.scores.html
 
   """
 
 }
+
 
 workflow.onComplete {
     println "Pipeline completed at: $workflow.complete"
