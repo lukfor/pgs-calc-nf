@@ -1,6 +1,6 @@
 
-Channel.fromFilePairs(params.dbsnp_index).set { dbsnp_index_ch}
-vcf_files = Channel.fromPath(params.genotypes_imputed)
+Channel.fromFilePairs(params.dbsnp_index).set{dbsnp_index_ch}
+Channel.fromFilePairs(params.genotypes_imputed).set{vcf_files}
 
 if (params.genotypes_imputed_format != 'vcf'){
   exit 1, "PGS Calc supports only vcf files."
@@ -122,15 +122,15 @@ process resolveScore {
     tuple val(dbsnp_index), file(dbsnp_index_file) from dbsnp_index_ch.collect()
 
   output:
-    file "${score_id}.resolved.txt.gz" into prepared_scores_ch
-    file "${score_id}.resolved.log"
+    file "${score_id}.txt.gz" into prepared_scores_ch
+    file "${score_id}.log"
 
   """
 
   pgs-calc resolve \
     --in ${score_file} \
-    --out ${score_id}.resolved.txt.gz \
-    --dbsnp ${dbsnp_index}.txt.gz > ${score_id}.resolved.log
+    --out ${score_id}.txt.gz \
+    --dbsnp ${dbsnp_index}.txt.gz > ${score_id}.log
 
   """
 }
@@ -140,7 +140,7 @@ process calcChunks {
   publishDir params.output, mode: 'copy'
 
   input:
-    file(vcf_file) from vcf_files
+    tuple val(vcf_filename), path(vcf_file) from vcf_files
     val scores from prepared_scores_ch.collect()
 
   output:
@@ -153,10 +153,10 @@ process calcChunks {
 
   wget https://www.pgscatalog.org/rest/score/all -O pgs-catalog.meta
 
-  pgs-calc apply ${vcf_file} \
+  pgs-calc apply ${vcf_filename}.vcf.gz \
     --ref ${scores.join(',')} \
-    --out ${vcf_file}.scores.txt \
-    --report-json ${vcf_file}.scores.json \
+    --out ${vcf_filename}.scores.txt \
+    --report-json ${vcf_filename}.scores.json \
     --meta pgs-catalog.meta \
     --no-ansi
   """

@@ -25,13 +25,35 @@ nextflow_pipeline {
 
     }
 
-    test("Test score from pgs catalog with vcf files") {
+    test("Test score from local catalog with vcf.gz files") {
 
         when {
             def testOutdir = outputDir
             params {
                 project = "test-gwas"
-                genotypes_imputed = "tests/data/*.vcf"
+                genotypes_imputed = "tests/data/*{.vcf.gz,vcf.gz.tbi}"
+                genotypes_imputed_format = "vcf"
+                genotypes_build = "hg19"
+                output = "${testOutdir}"
+                pgs_scores = "IBK000001"
+                pgs_catalog_url = "tests/data/metadata.xlsx"
+                dbsnp_index = "tests/data/dbsnp-index.small{.txt.gz,.txt.gz.tbi}"
+            }
+        }
+
+        then {
+            assert workflow.success
+        }
+
+    }
+
+    test("Test score from pgs catalog with vcf.gz files") {
+
+        when {
+            def testOutdir = outputDir
+            params {
+                project = "test-gwas"
+                genotypes_imputed = "tests/data/*{.vcf.gz,vcf.gz.tbi}"
                 genotypes_imputed_format = "vcf"
                 genotypes_build = "hg19"
                 output = "${testOutdir}"
@@ -53,7 +75,7 @@ nextflow_pipeline {
             def testOutdir = outputDir
             params {
                 project = "test-gwas"
-                genotypes_imputed = "tests/data/*.vcf"
+                genotypes_imputed = "tests/data/*{.vcf.gz,vcf.gz.tbi}"
                 genotypes_imputed_format = "vcf"
                 genotypes_build = "hg19"
                 output = "${testOutdir}"
