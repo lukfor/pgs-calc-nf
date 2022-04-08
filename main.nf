@@ -144,16 +144,19 @@ process resolveScore {
     tuple val(dbsnp_index), file(dbsnp_index_file) from dbsnp_index_ch.collect()
 
   output:
-    file "${score_id}.txt.gz" into prepared_scores_ch
+    file "${score_id}.txt.gz" optional true into prepared_scores_ch
     file "${score_id}.log"
 
   """
+  set +e
 
   pgs-calc resolve \
     --in ${score_file} \
     --out ${score_id}.txt.gz \
     --dbsnp ${dbsnp_index}.txt.gz > ${score_id}.log
 
+  # ignore pgs-calc status to get log files of failed scores.
+  exit 0
   """
 }
 
@@ -168,11 +171,12 @@ process calcChunks {
     val scores from prepared_scores_ch.collect()
 
   output:
-    file "*.txt" into score_chunks_ch
-    file "*.info" into report_chunks_ch
+    file "*.txt" optional true into score_chunks_ch
+    file "*.info" optional true into report_chunks_ch
     file "*.log"
 
   """
+  set +e
 
   pgs-calc apply ${vcf_filename}.vcf.gz \
     --ref ${scores.join(',')} \
@@ -180,6 +184,8 @@ process calcChunks {
     --info ${vcf_filename}.scores.info \
     --no-ansi > ${vcf_filename}.scores.log
 
+  # ignore pgs-calc status to get log files of failed scores.
+  exit 0
   """
 
 }
