@@ -4,3 +4,4 @@ output
 .nextflow
 test.config
 nf-test
+.nf-test

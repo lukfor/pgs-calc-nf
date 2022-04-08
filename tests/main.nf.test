@@ -6,13 +6,12 @@ nextflow_pipeline {
     test("Test score from local catalog with vcf files") {
 
         when {
-            def testOutdir = outputDir
             params {
                 project = "test-gwas"
                 genotypes_imputed = "tests/data/*.vcf"
                 genotypes_imputed_format = "vcf"
                 genotypes_build = "hg19"
-                output = "${testOutdir}"
+                output = "${outputDir}"
                 pgs_scores = "IBK000001"
                 pgs_catalog_url = "tests/data/metadata.xlsx"
                 dbsnp_index = "tests/data/dbsnp-index.small{.txt.gz,.txt.gz.tbi}"
@@ -28,13 +27,12 @@ nextflow_pipeline {
     test("Test score from local catalog with vcf.gz files") {
 
         when {
-            def testOutdir = outputDir
             params {
                 project = "test-gwas"
                 genotypes_imputed = "tests/data/*{.vcf.gz,vcf.gz.tbi}"
                 genotypes_imputed_format = "vcf"
                 genotypes_build = "hg19"
-                output = "${testOutdir}"
+                output = "${outputDir}"
                 pgs_scores = "IBK000001"
                 pgs_catalog_url = "tests/data/metadata.xlsx"
                 dbsnp_index = "tests/data/dbsnp-index.small{.txt.gz,.txt.gz.tbi}"
@@ -50,13 +48,12 @@ nextflow_pipeline {
     test("Test score from pgs catalog with vcf.gz files") {
 
         when {
-            def testOutdir = outputDir
             params {
                 project = "test-gwas"
                 genotypes_imputed = "tests/data/*{.vcf.gz,vcf.gz.tbi}"
                 genotypes_imputed_format = "vcf"
                 genotypes_build = "hg19"
-                output = "${testOutdir}"
+                output = "${outputDir}"
                 pgs_scores = "PGS000001"
                 pgs_catalog_url = "https://ftp.ebi.ac.uk/pub/databases/spot/pgs/metadata/pgs_all_metadata.xlsx"
                 dbsnp_index = "tests/data/dbsnp-index.small{.txt.gz,.txt.gz.tbi}"
@@ -72,13 +69,12 @@ nextflow_pipeline {
     test("Test score from pgs catalog with two scores") {
 
         when {
-            def testOutdir = outputDir
             params {
                 project = "test-gwas"
                 genotypes_imputed = "tests/data/*{.vcf.gz,vcf.gz.tbi}"
                 genotypes_imputed_format = "vcf"
                 genotypes_build = "hg19"
-                output = "${testOutdir}"
+                output = "${outputDir}"
                 pgs_scores = "PGS000957,PGS000958"
                 pgs_catalog_url = "https://ftp.ebi.ac.uk/pub/databases/spot/pgs/metadata/pgs_all_metadata.xlsx"
                 dbsnp_index = "tests/data/dbsnp-index.small{.txt.gz,.txt.gz.tbi}"
@@ -91,5 +87,23 @@ nextflow_pipeline {
 
     }
 
+    test("Test local score files") {
+
+        when {
+            params {
+                project = "test-gwas"
+                genotypes_imputed = "tests/data/*{.vcf.gz,vcf.gz.tbi}"
+                genotypes_imputed_format = "vcf"
+                genotypes_build = "hg19"
+                output = "${outputDir}"
+                scores = "tests/data/*.csv"
+            }
+        }
+
+        then {
+            assert workflow.success
+        }
+
+    }
 
 }

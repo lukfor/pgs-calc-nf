@@ -1,4 +1,4 @@
-chr	position_hg19	effect_weight	A1	A2	effect_allele
+chr_name	chr_position	effect_weight	A1	other_allele	effect_allele
 1	1	1	G	T	G
 1	2	1	T	G	T
 1	3	1	A	C	A

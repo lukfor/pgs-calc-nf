@@ -1,6 +1,9 @@
 
-Channel.fromFilePairs(params.dbsnp_index).set{dbsnp_index_ch}
 Channel.fromFilePairs(params.genotypes_imputed).set{vcf_files}
+
+if (params.scores == "") {
+
+Channel.fromFilePairs(params.dbsnp_index).set{dbsnp_index_ch}
 
 if (params.genotypes_imputed_format != 'vcf'){
   exit 1, "PGS Calc supports only vcf files."
@@ -154,6 +157,10 @@ process resolveScore {
   """
 }
 
+} else {
+  Channel.fromPath(params.scores).set{prepared_scores_ch}
+}
+
 process calcChunks {
 
   input:
@@ -226,6 +233,7 @@ process createHtmlReport {
 
   output:
     file "*.html"
+    file "*.coverage.txt"
 
   """
 
@@ -236,6 +244,13 @@ process createHtmlReport {
     --info ${merged_info} \
     --meta pgs-catalog.json \
     --out ${params.project}.scores.html
+
+  pgs-calc report \
+    --data ${merged_score} \
+    --info ${merged_info} \
+    --meta pgs-catalog.json \
+    --template txt \
+    --out ${params.project}.scores.coverage.txt
 
   """
 
