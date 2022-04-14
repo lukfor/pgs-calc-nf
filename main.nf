@@ -171,7 +171,7 @@ process calcChunks {
 
   input:
     tuple val(vcf_filename), path(vcf_file) from vcf_files
-    val scores from prepared_scores_ch.collect()
+    path scores from prepared_scores_ch.collect()
 
   output:
     file "*.txt" optional true into score_chunks_ch
