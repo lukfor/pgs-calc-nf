@@ -183,7 +183,7 @@ process calcChunks {
 
   pgs-calc apply ${vcf_filename}.vcf.gz \
     --ref ${scores.join(',')} \
-    --dosages ${params.genotypes_imputed_dosages} \
+    --genotypes ${params.genotypes_imputed_dosages} \
     --out ${vcf_filename}.scores.txt \
     --info ${vcf_filename}.scores.info \
     --no-ansi > ${vcf_filename}.scores.log
