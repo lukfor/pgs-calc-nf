@@ -1,6 +1,9 @@
 
-Channel.fromFilePairs(params.genotypes_imputed).set{vcf_files}
-
+if (params.genotypes_imputed_have_index){
+  Channel.fromFilePairs(params.genotypes_imputed).set{vcf_files}
+}else{
+  Channel.fromFilePairs(params.genotypes_imputed, size: 1).set{vcf_files}
+}
 if (params.scores == "") {
 
 Channel.fromFilePairs(params.dbsnp_index).set{dbsnp_index_ch}
