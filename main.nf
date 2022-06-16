@@ -1,9 +1,11 @@
 
 if (params.genotypes_imputed_have_index){
-  Channel.fromFilePairs(params.genotypes_imputed).set{vcf_files}
+  Channel.fromFilePairs(params.genotypes_imputed).map{it[1][0]}.set{vcf_files}
 }else{
-  Channel.fromFilePairs(params.genotypes_imputed, size: 1).set{vcf_files}
+  Channel.fromPath(params.genotypes_imputed).set{vcf_files}
 }
+
+
 if (params.scores == "") {
 
 Channel.fromFilePairs(params.dbsnp_index).set{dbsnp_index_ch}
@@ -170,8 +172,8 @@ process resolveScore {
 process calcChunks {
 
   input:
-    tuple val(vcf_filename), path(vcf_file) from vcf_files
-    val scores from prepared_scores_ch.collect()
+    file vcf_file from vcf_files
+    file scores from prepared_scores_ch.collect()
 
   output:
     file "*.txt" optional true into score_chunks_ch
@@ -181,12 +183,12 @@ process calcChunks {
   """
   set +e
 
-  pgs-calc apply ${vcf_filename}.vcf.gz \
+  pgs-calc apply ${vcf_file} \
     --ref ${scores.join(',')} \
-    --dosages ${params.genotypes_imputed_dosages} \
-    --out ${vcf_filename}.scores.txt \
-    --info ${vcf_filename}.scores.info \
-    --no-ansi > ${vcf_filename}.scores.log
+    --genotypes ${params.genotypes_imputed_dosages} \
+    --out ${vcf_file.baseName}.scores.txt \
+    --info ${vcf_file.baseName}.scores.info \
+    --no-ansi > ${vcf_file.baseName}.scores.log
 
   # ignore pgs-calc status to get log files of failed scores.
   exit 0
@@ -247,7 +249,8 @@ process createHtmlReport {
 
   """
 
-  wget https://www.pgscatalog.org/rest/score/all -O pgs-catalog.json
+  #wget https://www.pgscatalog.org/rest/score/all -O pgs-catalog.json
+  pgs-calc download-meta --out pgs-catalog.json
 
   pgs-calc report \
     --data ${merged_score} \
