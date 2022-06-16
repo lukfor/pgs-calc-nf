@@ -178,6 +178,7 @@ process calcChunks {
   output:
     file "*.txt" optional true into score_chunks_ch
     file "*.info" optional true into report_chunks_ch
+    file "*.variants" optional true into variants_chunks_ch
     file "*.log"
 
   """
@@ -188,6 +189,7 @@ process calcChunks {
     --genotypes ${params.genotypes_imputed_dosages} \
     --out ${vcf_file.baseName}.scores.txt \
     --info ${vcf_file.baseName}.scores.info \
+    ${params.write_variants ? "--write-variants " + vcf_file.baseName + ".variants " : ""} \
     --no-ansi > ${vcf_file.baseName}.scores.log
 
   # ignore pgs-calc status to get log files of failed scores.
@@ -229,6 +231,25 @@ process mergeInfoChunks {
 
   pgs-calc merge-info ${report_chunks} \
     --out ${params.project}.info
+
+  """
+
+}
+
+process mergeVariantsChunks {
+
+  publishDir params.output, mode: 'copy'
+
+  input:
+    file(variants_chunks) from variants_chunks_ch.collect()
+
+  output:
+    file "*.variants" into merged_variants_files
+
+  """
+
+  pgs-calc merge-variants ${variants_chunks} \
+    --out ${params.project}.variants
 
   """
 

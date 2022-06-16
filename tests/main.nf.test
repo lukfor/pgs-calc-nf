@@ -111,12 +111,33 @@ nextflow_pipeline {
         when {
             params {
                 project = "test-gwas"
-                genotypes_imputed = "tests/data/*{.vcf.gz}"
+                genotypes_imputed = "tests/data/*.vcf.gz"
                 genotypes_imputed_have_index = false
                 genotypes_imputed_format = "vcf"
                 genotypes_build = "hg19"
                 output = "${outputDir}"
                 scores = "tests/data/*.csv"
+            }
+        }
+
+        then {
+            assert workflow.success
+        }
+
+    }
+
+    test("Test with vcf only and write variants") {
+
+        when {
+            params {
+                project = "test-gwas"
+                genotypes_imputed = "tests/data/*.vcf.gz"
+                genotypes_imputed_have_index = false
+                genotypes_imputed_format = "vcf"
+                genotypes_build = "hg19"
+                output = "${outputDir}"
+                scores = "tests/data/*.csv"
+                write_variants = true
             }
         }
 
