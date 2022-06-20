@@ -41,6 +41,14 @@ workflow:
       type: text
       required: true
 
+    - id: write_variants
+      description: Output
+      type: list
+      value: false
+      values:
+        false: No variant list
+        true: Variant list
+
   outputs:
 
     - id: output
