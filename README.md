@@ -24,8 +24,18 @@ docker build -t lukfor/pgs-calc-nf . # don't ingore the dot here
 Test the pipeline and the created docker image with test-data:
 
 ```
-nextflow run main.nf --project my-project-name --input test-data/*.dose.vcf.gz --output output --pgs_scores PGS000013,PGS000014
+nextflow run main.nf \
+  --project test-project  \
+  --genotypes_imputed "tests/data/*.vcf.gz" \
+  --genotypes_imputed_format "vcf" \
+  --genotypes_imputed_have_index false \
+  --genotypes_build "hg19" \
+  --scores "tests/data/*.csv"
+  --output output
 ```
+
+Normalized score files from PGSCatalog can be downloaded from [here](https://imputationserver.sph.umich.edu/resources/pgs-catalog/).
+
 
 ## Contact
 
