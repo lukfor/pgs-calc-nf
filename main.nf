@@ -190,6 +190,7 @@ process calcChunks {
     --out ${vcf_file.baseName}.scores.txt \
     --info ${vcf_file.baseName}.scores.info \
     ${params.write_variants ? "--write-variants " + vcf_file.baseName + ".variants " : ""} \
+    --min-r2 ${params.min_r2} \
     --no-ansi > ${vcf_file.baseName}.scores.log
 
   # ignore pgs-calc status to get log files of failed scores.

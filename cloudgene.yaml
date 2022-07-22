@@ -41,6 +41,20 @@ workflow:
       type: text
       required: true
 
+    - id: write_variants
+      description: Output
+      type: list
+      value: false
+      values:
+        false: No variant list
+        true: Variant list
+
+    - id: min_r2
+      description: R2 Threshold
+      type: text
+      value: 0
+      required: true
+
   outputs:
 
     - id: output
