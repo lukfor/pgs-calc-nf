@@ -15,7 +15,7 @@ RUN wget https://github.com/jbangdev/jbang/releases/download/v0.81.2/jbang-0.81.
 ENV PATH="/opt/jbang/bin:${PATH}"
 
 # Install pgs-calc (not as conda package available)
-ENV PGS_CALC_VERSION="1.2.0"
+ENV PGS_CALC_VERSION="1.3.2"
 RUN mkdir /opt/pgs-calc
 WORKDIR "/opt/pgs-calc"
 RUN wget https://github.com/lukfor/pgs-calc/releases/download/v${PGS_CALC_VERSION}/pgs-calc-${PGS_CALC_VERSION}.tar.gz && \
