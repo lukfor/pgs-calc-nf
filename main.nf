@@ -1,8 +1,37 @@
 
 if (params.genotypes_imputed_have_index){
   Channel.fromFilePairs(params.genotypes_imputed).map{it[1][0]}.set{vcf_files}
+  Channel.fromFilePairs(params.genotypes_imputed).map{it[1][0]}.set{vcf_files2}
 }else{
   Channel.fromPath(params.genotypes_imputed).set{vcf_files}
+  Channel.fromPath(params.genotypes_imputed).set{vcf_files2}
+}
+
+if (params.chunk_size != 0){
+
+  vcf_files2.map{tuple(it.name, it)}.set{vcf_files_index}
+
+  process createChunks {
+
+    input:
+      file vcfs from vcf_files.collect()
+
+    output:
+      file "chunks.txt" into chunks_file
+
+    """
+    pgs-calc create-chunks ${vcfs} --size ${params.chunk_size} --out chunks.txt
+    """
+
+  }
+
+  chunks_file
+    .splitCsv(header: true, sep: ',', quote:'"')
+    .map(row -> tuple(row['FILENAME'], row['START'], row['END']))
+    .combine(vcf_files_index, by: 0).set{chunks_ch}
+
+} else {
+  vcf_files.map{tuple(it.name, 1, 250000000, it)}.set{chunks_ch}
 }
 
 
@@ -172,7 +201,7 @@ process resolveScore {
 process calcChunks {
 
   input:
-    file vcf_file from vcf_files
+    tuple val(name), val(start), val(end), file(vcf_file) from chunks_ch
     file scores from prepared_scores_ch.collect()
 
   output:
@@ -187,8 +216,10 @@ process calcChunks {
   pgs-calc apply ${vcf_file} \
     --ref ${scores.join(',')} \
     --genotypes ${params.genotypes_imputed_dosages} \
-    --out ${vcf_file.baseName}.scores.txt \
-    --info ${vcf_file.baseName}.scores.info \
+    --out ${vcf_file.baseName}_${start}_${end}.scores.txt \
+    --info ${vcf_file.baseName}_${start}_${end}.scores.info \
+    --start ${start} \
+    --end ${end} \
     ${params.write_variants ? "--write-variants " + vcf_file.baseName + ".variants " : ""} \
     --min-r2 ${params.min_r2} \
     --no-ansi > ${vcf_file.baseName}.scores.log
