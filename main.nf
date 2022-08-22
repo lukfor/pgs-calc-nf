@@ -35,6 +35,12 @@ if (params.chunk_size != 0){
 }
 
 
+if (params.proxy_map){
+  Channel.fromFilePairs(params.proxy_map).set{proxy_map_ch}
+} else {
+  proxy_map_ch = [tuple(null, null, null)]
+}
+
 if (params.scores == "") {
 
 Channel.fromFilePairs(params.dbsnp_index).set{dbsnp_index_ch}
@@ -203,6 +209,7 @@ process calcChunks {
   input:
     tuple val(name), val(start), val(end), file(vcf_file) from chunks_ch
     file scores from prepared_scores_ch.collect()
+    tuple val(proxy_map), file(proxy_map_file) from proxy_map_ch.collect()
 
   output:
     file "*.txt" optional true into score_chunks_ch
@@ -222,6 +229,7 @@ process calcChunks {
     --end ${end} \
     ${params.write_variants ? "--write-variants " + vcf_file.baseName + ".variants " : ""} \
     ${params.fix_strand_flips ? "--fix-strand-flips" : ""} \
+    ${proxy_map ? "--proxies ${proxy_map}.txt.gz" : ""} \
     --min-r2 ${params.min_r2} \
     --no-ansi > ${vcf_file.baseName}.scores.log
 
