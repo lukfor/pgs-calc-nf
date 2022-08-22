@@ -221,6 +221,7 @@ process calcChunks {
     --start ${start} \
     --end ${end} \
     ${params.write_variants ? "--write-variants " + vcf_file.baseName + ".variants " : ""} \
+    ${params.fix_strand_flips ? "--fix-strand-flips" : ""} \
     --min-r2 ${params.min_r2} \
     --no-ansi > ${vcf_file.baseName}.scores.log
 
