@@ -217,21 +217,24 @@ process calcChunks {
     file "*.variants" optional true into variants_chunks_ch
     file "*.log"
 
+  script:
+    name = "${vcf_file.baseName}_${start}_${end}"
+
   """
   set +e
 
   pgs-calc apply ${vcf_file} \
     --ref ${scores.join(',')} \
     --genotypes ${params.genotypes_imputed_dosages} \
-    --out ${vcf_file.baseName}_${start}_${end}.scores.txt \
-    --info ${vcf_file.baseName}_${start}_${end}.scores.info \
+    --out ${name}.scores.txt \
+    --info ${name}.scores.info \
     --start ${start} \
     --end ${end} \
-    ${params.write_variants ? "--write-variants " + vcf_file.baseName + ".variants " : ""} \
+    ${params.write_variants ? "--write-variants ${name}.variants " : ""} \
     ${params.fix_strand_flips ? "--fix-strand-flips" : ""} \
     ${proxy_map ? "--proxies ${proxy_map}.txt.gz" : ""} \
     --min-r2 ${params.min_r2} \
-    --no-ansi > ${vcf_file.baseName}.scores.log
+    --no-ansi > ${name}.scores.log
 
   # ignore pgs-calc status to get log files of failed scores.
   exit 0
