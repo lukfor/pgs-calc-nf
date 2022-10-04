@@ -1,4 +1,5 @@
 # pgs-calc-nf
+[![nf-test](https://img.shields.io/badge/tested_with-nf--test-337ab7.svg)](https://github.com/askimed/nf-test)
 
 > Nextflow pipeline to calculate polygenic scores using pgs-calc
 
