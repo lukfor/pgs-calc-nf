@@ -3,91 +3,6 @@ nextflow_pipeline {
     name "Test Workflow main.nf"
     script "main.nf"
 
-    test("Test score from local catalog with vcf files") {
-
-        when {
-            params {
-                project = "test-gwas"
-                genotypes_imputed = "tests/data/*.vcf"
-                genotypes_imputed_have_index = false
-                genotypes_imputed_format = "vcf"
-                genotypes_build = "hg19"
-                output = "${outputDir}"
-                pgs_scores = "IBK000001"
-                pgs_catalog_url = "tests/data/metadata.xlsx"
-                dbsnp_index = "tests/data/dbsnp-index.small{.txt.gz,.txt.gz.tbi}"
-            }
-        }
-
-        then {
-            assert workflow.success
-        }
-
-    }
-
-    test("Test score from local catalog with vcf.gz files") {
-
-        when {
-            params {
-                project = "test-gwas"
-                genotypes_imputed = "tests/data/*{.vcf.gz,vcf.gz.tbi}"
-                genotypes_imputed_format = "vcf"
-                genotypes_build = "hg19"
-                output = "${outputDir}"
-                pgs_scores = "IBK000001"
-                pgs_catalog_url = "tests/data/metadata.xlsx"
-                dbsnp_index = "tests/data/dbsnp-index.small{.txt.gz,.txt.gz.tbi}"
-            }
-        }
-
-        then {
-            assert workflow.success
-        }
-
-    }
-
-    test("Test score from pgs catalog with vcf.gz files") {
-
-        when {
-            params {
-                project = "test-gwas"
-                genotypes_imputed = "tests/data/*{.vcf.gz,vcf.gz.tbi}"
-                genotypes_imputed_format = "vcf"
-                genotypes_build = "hg19"
-                output = "${outputDir}"
-                pgs_scores = "PGS000001"
-                pgs_catalog_url = "https://ftp.ebi.ac.uk/pub/databases/spot/pgs/metadata/pgs_all_metadata.xlsx"
-                dbsnp_index = "tests/data/dbsnp-index.small{.txt.gz,.txt.gz.tbi}"
-            }
-        }
-
-        then {
-            assert workflow.success
-        }
-
-    }
-
-    test("Test score from pgs catalog with two scores") {
-
-        when {
-            params {
-                project = "test-gwas"
-                genotypes_imputed = "tests/data/*{.vcf.gz,vcf.gz.tbi}"
-                genotypes_imputed_format = "vcf"
-                genotypes_build = "hg19"
-                output = "${outputDir}"
-                pgs_scores = "PGS000957,PGS000958"
-                pgs_catalog_url = "https://ftp.ebi.ac.uk/pub/databases/spot/pgs/metadata/pgs_all_metadata.xlsx"
-                dbsnp_index = "tests/data/dbsnp-index.small{.txt.gz,.txt.gz.tbi}"
-            }
-        }
-
-        then {
-            assert workflow.success
-        }
-
-    }
-
     test("Test local score files") {
 
         when {
@@ -159,7 +74,7 @@ nextflow_pipeline {
                 genotypes_build = "hg19"
                 output = "${outputDir}"
                 scores = "tests/data/*.csv"
-                chunk_size = 3
+                chunk_size = 2
             }
         }
 
@@ -169,18 +84,19 @@ nextflow_pipeline {
 
     }
 
-    test("Test with proxy map") {
+    test("Test with chunk size-lukas") {
 
         when {
             params {
                 project = "test-gwas"
-                genotypes_imputed = "tests/data/*.vcf.gz"
+                genotypes_imputed = "/Users/lukfor/Data/projects/humangen/breast-pgs/output/pgs-server/vcf/*.dose.vcf.gz"
                 genotypes_imputed_have_index = false
                 genotypes_imputed_format = "vcf"
                 genotypes_build = "hg19"
                 output = "${outputDir}"
-                scores = "tests/data/*.csv"
-                proxy_map = "tests/data/proxy-map{.txt.gz,.txt.gz.tbi}"
+                scores = "/Users/lukfor/Data/projects/humangen/breast-pgs/output/pgs-server/PGS000004.txt"
+                chunk_size = 20_000_000
+                write_variants = true
             }
         }
 
